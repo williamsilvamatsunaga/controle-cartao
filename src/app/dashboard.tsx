@@ -259,28 +259,43 @@ export default function Dashboard() {
         <>
           <Text style={styles.secaoTitulo}>Gastos por categoria este mês</Text>
           <View style={styles.card}>
-            {gastosPorCategoria.map((g, index) => (
-              <View key={g.categoria} style={[
-                styles.categoriaLinha,
-                index < gastosPorCategoria.length - 1 && styles.mesLinhaBorda,
-              ]}>
-                <View style={styles.categoriaEsquerda}>
-                  <View style={[styles.categoriaCirculo, { backgroundColor: CORES_CATEGORIA[g.categoria] }]} />
-                  <Text style={styles.categoriaNome}>{g.categoria}</Text>
-                </View>
-                <View style={styles.categoriaDireita}>
-                  <View style={styles.categoriaBarra}>
-                    <View style={[styles.categoriaBarraFill, {
-                      width: `${(g.total / maiorGasto) * 100}%`,
-                      backgroundColor: CORES_CATEGORIA[g.categoria],
-                    }]} />
+
+            {/* Barra empilhada */}
+            <View style={styles.barraEmpilhadaContainer}>
+              {gastosPorCategoria.map((g) => {
+                const largura = (g.total / comprometidoAtual) * 100;
+                return (
+                  <View
+                    key={g.categoria}
+                    style={[
+                      styles.barraEmpilhadaSegmento,
+                      {
+                        width: `${largura}%`,
+                        backgroundColor: CORES_CATEGORIA[g.categoria],
+                      },
+                    ]}
+                  />
+                );
+              })}
+            </View>
+
+            {/* Legenda em grade */}
+            <View style={styles.legendaGrid}>
+              {gastosPorCategoria.map((g) => (
+                <View key={g.categoria} style={styles.legendaItem}>
+                  <View style={styles.legendaEsquerda}>
+                    <View style={[styles.legendaCirculo, { backgroundColor: CORES_CATEGORIA[g.categoria] }]} />
+                    <Text style={styles.legendaNome} numberOfLines={1} ellipsizeMode="tail">
+                      {g.categoria}
+                    </Text>
                   </View>
-                  <Text style={[styles.categoriaValor, { color: CORES_CATEGORIA[g.categoria] }]}>
-                    R$ {g.total.toFixed(2)}
+                  <Text style={[styles.legendaValor, { color: CORES_CATEGORIA[g.categoria] }]}>
+                    R$ {g.total.toFixed(0)}
                   </Text>
                 </View>
-              </View>
-            ))}
+              ))}
+            </View>
+
           </View>
         </>
       )}
@@ -395,4 +410,55 @@ const styles = StyleSheet.create({
     borderColor: '#dc2626', alignItems: 'center',
   },
   botaoResetarTexto: { color: '#dc2626', fontSize: 14 },
+
+  barraEmpilhadaContainer: {
+  flexDirection: 'row',
+  height: 20,
+  borderRadius: 10,
+  overflow: 'hidden',
+  marginBottom: 20,
+  },
+  barraEmpilhadaSegmento: {
+    height: '100%',
+  },
+  legendaGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  legendaItem: {
+    width: '47%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  legendaEsquerda: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 4,
+  },
+  legendaCirculo: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 6,
+    flexShrink: 0,
+  },
+  legendaNome: {
+    fontSize: 12,
+    color: '#333',
+    flex: 1,
+  },
+  legendaValor: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    flexShrink: 0,
+  },
 });
