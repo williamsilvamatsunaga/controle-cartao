@@ -1,33 +1,60 @@
+export type Categoria =
+  | 'Mercado'
+  | 'Combustível'
+  | 'Saúde'
+  | 'Contas'
+  | 'Moradia'
+  | 'Educação'
+  | 'Transporte'
+  | 'Academia'
+  | 'Internet'
+  | 'Telefonia'
+  | 'Lazer'
+  | 'Streaming'
+  | 'Restaurantes'
+  | 'Compras'
+  | 'Games'
+  | 'Presentes'
+  | 'Outros';
+
+export interface RendaMensal {
+  mes: string; // "YYYY-MM"
+  total: number; // salarioLiquido + outrasRendas
+}
+
 export interface PerfilFinanceiro {
   salarioLiquido: number;
   outrasRendas: number;
-  reservaEmergencia: number;
-  investimentos: number;
+  deducoesMensais: number; // reserva + investimentos unificados
+  diaFechamento: number;
+  ultimoFechamento: string | null;
+  historicoRendas: RendaMensal[];
 }
-
-export type Categoria =
-  | 'Tecnologia'
-  | 'Alimentação'
-  | 'Vestuário'
-  | 'Saúde'
-  | 'Lazer'
-  | 'Casa'
-  | 'Outros';
 
 export interface Compra {
   id: string;
   valor: number;
   numeroParcelas: number;
   categoria: Categoria;
-  dataCompra: string; // formato ISO, ex: "2026-06-28"
-  parcelaMensal: number; // calculado automaticamente ao salvar
+  dataCompra: string;
+  parcelaMensal: number;
 }
 
 export type ClassificacaoCompra = 'ok' | 'moderado' | 'atencao';
 
 export interface ResultadoAnaliseCompra {
   parcelaMensal: number;
-  comprometimentoAtual: number; // %
-  comprometimentoApos: number; // %
+  comprometimentoAtual: number;
+  comprometimentoApos: number;
   classificacao: ClassificacaoCompra;
+}
+
+export interface FaturaHistorico {
+  id: string;
+  mes: string;
+  compras: Compra[];
+  rendaDisponivel: number;
+  totalComprometido: number;
+  percentualComprometido: number;
+  fechadaEm: string;
 }

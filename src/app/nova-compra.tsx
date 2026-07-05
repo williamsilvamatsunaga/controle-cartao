@@ -14,13 +14,9 @@ import { Categoria, ResultadoAnaliseCompra } from '../types';
 import { analisarNovaCompra } from '../utils/calculos';
 
 const CATEGORIAS: Categoria[] = [
-  'Tecnologia',
-  'Alimentação',
-  'Vestuário',
-  'Saúde',
-  'Lazer',
-  'Casa',
-  'Outros',
+  'Mercado', 'Combustível', 'Saúde', 'Contas', 'Moradia', 'Educação',
+  'Transporte', 'Academia', 'Internet', 'Telefonia', 'Lazer', 'Streaming',
+  'Restaurantes', 'Compras', 'Games', 'Presentes', 'Outros',
 ];
 
 export default function NovaCompra() {

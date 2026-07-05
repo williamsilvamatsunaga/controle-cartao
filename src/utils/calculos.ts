@@ -1,46 +1,45 @@
 import { ClassificacaoCompra, Compra, PerfilFinanceiro, ResultadoAnaliseCompra } from '../types';
 
-// Renda disponível para gastos, após reserva e investimentos
 export function calcularRendaDisponivel(perfil: PerfilFinanceiro): number {
-  return perfil.salarioLiquido + perfil.outrasRendas - perfil.reservaEmergencia - perfil.investimentos;
+  return perfil.salarioLiquido + perfil.outrasRendas - perfil.deducoesMensais;
 }
 
-// Parcela mensal de uma compra (sem juros)
+// Usa média dos últimos 2 meses para projeções futuras
+export function calcularRendaMediaFutura(perfil: PerfilFinanceiro): number {
+  const historico = perfil.historicoRendas ?? [];
+  if (historico.length >= 2) {
+    const ultimas2 = historico.slice(-2);
+    const mediaRendaBruta = ultimas2.reduce((s, r) => s + r.total, 0) / 2;
+    return mediaRendaBruta - perfil.deducoesMensais;
+  }
+  return calcularRendaDisponivel(perfil);
+}
+
 export function calcularParcelaMensal(valor: number, numeroParcelas: number): number {
   return valor / numeroParcelas;
 }
 
-// Soma das parcelas de TODAS as compras que ainda estão ativas em um mês específico
-export function calcularComprometimentoNoMes(
-  compras: Compra[],
-  mesReferencia: string // formato "YYYY-MM"
-): number {
-  return compras.reduce((total, compra) => {
-    const compraEstaAtivaNoMes = compraIncideNoMes(compra, mesReferencia);
-    return compraEstaAtivaNoMes ? total + compra.parcelaMensal : total;
-  }, 0);
-}
-
-// Verifica se uma compra ainda tem parcela "rodando" em determinado mês
-function compraIncideNoMes(compra: Compra, mesReferencia: string): boolean {
+export function compraIncideNoMes(compra: Compra, mesReferencia: string): boolean {
   const [anoCompra, mesCompra] = compra.dataCompra.split('-').map(Number);
   const [anoRef, mesRef] = mesReferencia.split('-').map(Number);
-
   const indiceMesCompra = anoCompra * 12 + (mesCompra - 1);
   const indiceMesRef = anoRef * 12 + (mesRef - 1);
-
   const mesesPassados = indiceMesRef - indiceMesCompra;
   return mesesPassados >= 0 && mesesPassados < compra.numeroParcelas;
 }
 
-// Classificação visual baseada no % comprometido
+export function calcularComprometimentoNoMes(compras: Compra[], mesReferencia: string): number {
+  return compras.reduce((total, compra) => {
+    return compraIncideNoMes(compra, mesReferencia) ? total + compra.parcelaMensal : total;
+  }, 0);
+}
+
 export function classificarComprometimento(percentual: number): ClassificacaoCompra {
   if (percentual <= 40) return 'ok';
   if (percentual <= 60) return 'moderado';
   return 'atencao';
 }
 
-// Função central: simula o impacto de uma nova compra ANTES de salvar
 export function analisarNovaCompra(
   perfil: PerfilFinanceiro,
   comprasExistentes: Compra[],
@@ -49,19 +48,16 @@ export function analisarNovaCompra(
   dataCompra: string
 ): ResultadoAnaliseCompra {
   const rendaDisponivel = calcularRendaDisponivel(perfil);
-  const mesReferencia = dataCompra.slice(0, 7); // "YYYY-MM"
-
+  const mesReferencia = dataCompra.slice(0, 7);
   const comprometidoAtual = calcularComprometimentoNoMes(comprasExistentes, mesReferencia);
   const parcelaMensal = calcularParcelaMensal(valorNovaCompra, numeroParcelas);
   const comprometidoApos = comprometidoAtual + parcelaMensal;
-
-  const comprometimentoAtualPercentual = (comprometidoAtual / rendaDisponivel) * 100;
-  const comprometimentoAposPercentual = (comprometidoApos / rendaDisponivel) * 100;
+  const percentualApos = rendaDisponivel > 0 ? (comprometidoApos / rendaDisponivel) * 100 : 0;
 
   return {
     parcelaMensal,
-    comprometimentoAtual: comprometimentoAtualPercentual,
-    comprometimentoApos: comprometimentoAposPercentual,
-    classificacao: classificarComprometimento(comprometimentoAposPercentual),
+    comprometimentoAtual: rendaDisponivel > 0 ? (comprometidoAtual / rendaDisponivel) * 100 : 0,
+    comprometimentoApos: percentualApos,
+    classificacao: classificarComprometimento(percentualApos),
   };
 }

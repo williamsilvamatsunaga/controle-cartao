@@ -7,6 +7,7 @@ export default function RootLayout() {
       <Stack.Screen name="cadastro-perfil" />
       <Stack.Screen name="dashboard" />
       <Stack.Screen name="nova-compra" />
+      <Stack.Screen name="historico" />
     </Stack>
   );
 }
