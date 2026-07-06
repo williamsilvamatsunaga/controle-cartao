@@ -90,6 +90,8 @@ export default function Dashboard() {
   // Confirmação da compra
   const [confirmandoCancelamento, setConfirmandoCancelamento] = useState<string | null>(null);
 
+  const [confirmandoReset, setConfirmandoReset] = useState(false);
+
   useEffect(() => { carregarDados(); }, []);
 
   async function carregarDados() {
@@ -387,9 +389,29 @@ export default function Dashboard() {
         <Text style={styles.botaoHistoricoTexto}>📋 Ver histórico de faturas</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.botaoResetar} onPress={handleResetar}>
+      {confirmandoReset ? (
+      <View style={styles.resetConfirmacao}>
+        <Text style={styles.resetConfirmacaoTexto}>
+          Tem certeza que deseja começar do zero? Você irá perder todas as informações atuais.
+        </Text>
+        <View style={styles.resetConfirmacaoBotoes}>
+          <Pressable style={styles.resetBotaoSim} onPress={handleResetar}>
+            <Text style={styles.resetBotaoSimTexto}>Sim, recomeçar</Text>
+          </Pressable>
+          <Pressable style={styles.resetBotaoNao} onPress={() => setConfirmandoReset(false)}>
+            <Text style={styles.resetBotaoNaoTexto}>Cancelar</Text>
+          </Pressable>
+        </View>
+      </View>
+      ) : (
+        <TouchableOpacity style={styles.botaoResetar} onPress={() => setConfirmandoReset(true)}>
+          <Text style={styles.botaoResetarTexto}>🔄 Recomeçar do zero</Text>
+        </TouchableOpacity>
+      )}
+
+      {/* <TouchableOpacity style={styles.botaoResetar} onPress={handleResetar}>
         <Text style={styles.botaoResetarTexto}>🔄 Recomeçar do zero</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
     </ScrollView>
   );
@@ -572,5 +594,53 @@ const styles = StyleSheet.create({
     color: '#555',
     fontSize: 12,
     fontWeight: '600',
+  },
+
+
+
+  resetConfirmacao: {
+  backgroundColor: '#fff5f5',
+  borderRadius: 12,
+  borderWidth: 1,
+  borderColor: '#fca5a5',
+  padding: 16,
+  marginTop: 8,
+  },
+  resetConfirmacaoTexto: {
+    fontSize: 14,
+    color: '#7f1d1d',
+    lineHeight: 20,
+    marginBottom: 14,
+    textAlign: 'center',
+  },
+  resetConfirmacaoBotoes: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  resetBotaoSim: {
+    flex: 1,
+    backgroundColor: '#dc2626',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  resetBotaoSimTexto: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  resetBotaoNao: {
+    flex: 1,
+    backgroundColor: '#f1f5f9',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+  },
+  resetBotaoNaoTexto: {
+    color: '#555',
+    fontWeight: '600',
+    fontSize: 14,
   },
 });
