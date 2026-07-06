@@ -1,30 +1,33 @@
 import { Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
-import { carregarPerfil } from '../storage/storage';
+import { carregarPerfil, verificarPrimeiraVez } from '../storage/storage';
 
 export default function Index() {
   const [carregando, setCarregando] = useState(true);
-  const [temPerfil, setTemPerfil] = useState(false);
+  const [destino, setDestino] = useState<'bem-vindo' | 'cadastro-perfil' | 'dashboard'>('dashboard');
 
   useEffect(() => {
-    async function verificarPerfil() {
-      const perfil = await carregarPerfil();
-      setTemPerfil(perfil !== null);
+    async function verificar() {
+      const primeiraVez = await verificarPrimeiraVez();
+      if (primeiraVez) {
+        setDestino('bem-vindo');
+      } else {
+        const perfil = await carregarPerfil();
+        setDestino(perfil ? 'dashboard' : 'cadastro-perfil');
+      }
       setCarregando(false);
     }
-    verificarPerfil();
+    verificar();
   }, []);
 
   if (carregando) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color="#2563eb" />
       </View>
     );
   }
 
-  return temPerfil
-    ? <Redirect href="/dashboard" />
-    : <Redirect href="/cadastro-perfil" />;
+  return <Redirect href={`/${destino}`} />;
 }

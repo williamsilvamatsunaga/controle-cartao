@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { carregarCompras, carregarPerfil, fecharFatura, limparTudo } from '../storage/storage';
+import { carregarCompras, carregarPerfil, fecharFatura, limparTudo, removerCompra } from '../storage/storage';
 import { Categoria, Compra, PerfilFinanceiro } from '../types';
 import {
   calcularComprometimentoNoMes,
@@ -62,11 +63,18 @@ function getCorPercentual(p: number): string {
 
 function deveFecharFatura(perfil: PerfilFinanceiro): boolean {
   const hoje = new Date();
-  if (hoje.getDate() < perfil.diaFechamento) return false;
-  if (!perfil.ultimoFechamento) return true;
+  const diaHoje = hoje.getDate();
+
+  if (diaHoje < perfil.diaFechamento) return false;
+  if (!perfil.ultimoFechamento) return false; // nunca deve cair aqui agora
+
   const ultimoFech = new Date(perfil.ultimoFechamento);
-  const fechamentoEsteMes = new Date(hoje.getFullYear(), hoje.getMonth(), perfil.diaFechamento);
-  return ultimoFech < fechamentoEsteMes;
+
+  // Só mostra se o último fechamento foi em um mês anterior ao atual
+  const mesAtual = hoje.getFullYear() * 12 + hoje.getMonth();
+  const mesUltimoFech = ultimoFech.getFullYear() * 12 + ultimoFech.getMonth();
+
+  return mesAtual > mesUltimoFech;
 }
 
 export default function Dashboard() {
@@ -79,6 +87,8 @@ export default function Dashboard() {
   const [mostraFormFechamento, setMostraFormFechamento] = useState(false);
   const [novoSalario, setNovoSalario] = useState('');
   const [novasOutrasRendas, setNovasOutrasRendas] = useState('');
+  // Confirmação da compra
+  const [confirmandoCancelamento, setConfirmandoCancelamento] = useState<string | null>(null);
 
   useEffect(() => { carregarDados(); }, []);
 
@@ -107,10 +117,21 @@ export default function Dashboard() {
     carregarDados();
   }
 
+  async function handleCancelarCompra(id: string) {
+    await removerCompra(id);
+    setConfirmandoCancelamento(null);
+    carregarDados();
+  }
+
   async function handleResetar() {
     await limparTudo();
-    router.replace('/cadastro-perfil');
+    router.replace('/');
   }
+
+  // async function handleResetar() {
+  //   await limparTudo();
+  //   router.replace('/cadastro-perfil');
+  // }
 
   if (carregando) {
     return (
@@ -219,6 +240,14 @@ export default function Dashboard() {
             R$ {comprometidoAtual.toFixed(2)}
           </Text>
         </View>
+
+        {perfil.deducoesMensais > 0 && (
+          <View style={styles.cardLinha}>
+            <Text style={styles.cardLabel}>Reserva / Investimentos</Text>
+            <Text style={styles.cardValor}>R$ {perfil.deducoesMensais.toFixed(2)}</Text>
+          </View>
+        )}
+
         <View style={styles.barraContainer}>
           <View style={[styles.barra, {
             width: `${Math.min(percentualAtual, 100)}%`,
@@ -320,7 +349,34 @@ export default function Dashboard() {
                   {compra.numeroParcelas}x de R$ {compra.parcelaMensal.toFixed(2)}
                 </Text>
               </View>
-              <Text style={styles.compraValor}>R$ {compra.valor.toFixed(2)}</Text>
+
+              <View style={styles.compraDireita}>
+                <Text style={styles.compraValor}>R$ {compra.valor.toFixed(2)}</Text>
+
+                {confirmandoCancelamento === compra.id ? (
+                  <View style={styles.confirmacaoContainer}>
+                    <Text style={styles.confirmacaoTexto}>Cancelar compra?</Text>
+                    <View style={styles.confirmacaoBotoes}>
+                      <Pressable
+                        style={styles.botaoConfirmarSim}
+                        onPress={() => handleCancelarCompra(compra.id)}>
+                        <Text style={styles.botaoConfirmarSimTexto}>Sim</Text>
+                      </Pressable>
+                      <Pressable
+                        style={styles.botaoConfirmarNao}
+                        onPress={() => setConfirmandoCancelamento(null)}>
+                        <Text style={styles.botaoConfirmarNaoTexto}>Não</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                ) : (
+                  <Pressable
+                    style={styles.botaoCancelarCompra}
+                    onPress={() => setConfirmandoCancelamento(compra.id)}>
+                    <Text style={styles.botaoCancelarCompraTexto}>Cancelar</Text>
+                  </Pressable>
+                )}
+              </View>
             </View>
           ))
         )}
@@ -332,7 +388,7 @@ export default function Dashboard() {
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.botaoResetar} onPress={handleResetar}>
-        <Text style={styles.botaoResetarTexto}>Resetar dados (teste)</Text>
+        <Text style={styles.botaoResetarTexto}>🔄 Recomeçar do zero</Text>
       </TouchableOpacity>
 
     </ScrollView>
@@ -460,5 +516,61 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
     flexShrink: 0,
+  },
+
+  compraDireita: {
+  alignItems: 'flex-end',
+  gap: 6,
+  },
+  botaoCancelarCompra: {
+    backgroundColor: '#fee2e2',
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#fca5a5',
+  },
+  botaoCancelarCompraTexto: {
+    color: '#dc2626',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+
+  confirmacaoContainer: {
+  alignItems: 'flex-end',
+  gap: 6,
+  },
+  confirmacaoTexto: {
+    fontSize: 12,
+    color: '#dc2626',
+    fontWeight: '600',
+  },
+  confirmacaoBotoes: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  botaoConfirmarSim: {
+    backgroundColor: '#dc2626',
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  botaoConfirmarSimTexto: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  botaoConfirmarNao: {
+    backgroundColor: '#f1f5f9',
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+  },
+  botaoConfirmarNaoTexto: {
+    color: '#555',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

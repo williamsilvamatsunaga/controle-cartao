@@ -6,6 +6,25 @@ const CHAVE_PERFIL = '@controle_cartao:perfil';
 const CHAVE_COMPRAS = '@controle_cartao:compras';
 const CHAVE_HISTORICO = '@controle_cartao:historico';
 
+//
+
+const CHAVE_PRIMEIRA_VEZ = '@controle_cartao:primeiraVez';
+
+export async function verificarPrimeiraVez(): Promise<boolean> {
+  try {
+    const valor = await AsyncStorage.getItem(CHAVE_PRIMEIRA_VEZ);
+    return valor === null;
+  } catch {
+    return true;
+  }
+}
+
+export async function marcarPrimeiraVezConcluida(): Promise<void> {
+  await AsyncStorage.setItem(CHAVE_PRIMEIRA_VEZ, 'false');
+}
+
+//
+
 // PERFIL
 export async function salvarPerfil(perfil: PerfilFinanceiro): Promise<void> {
   try {
@@ -116,5 +135,10 @@ export async function fecharFatura(
 }
 
 export async function limparTudo(): Promise<void> {
-  await AsyncStorage.multiRemove([CHAVE_PERFIL, CHAVE_COMPRAS, CHAVE_HISTORICO]);
+  await AsyncStorage.multiRemove([
+    CHAVE_PERFIL,
+    CHAVE_COMPRAS,
+    CHAVE_HISTORICO,
+    CHAVE_PRIMEIRA_VEZ,
+  ]);
 }
