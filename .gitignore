@@ -41,3 +41,10 @@ example
 # generated native folders
 /ios
 /android
+
+# Agentes, skills e docs de design (não sobem no repositório)
+.agents/
+docs/
+DESIGN.md
+PRODUCT.md
+skills-lock.json
