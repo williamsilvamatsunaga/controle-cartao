@@ -1,7 +1,7 @@
 import { Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
-import { carregarPerfil, verificarPrimeiraVez } from '../storage/storage';
+import { carregarPerfil, verificarPrimeiraVez } from '@/shared/storage';
+import { Screen } from '@/shared/ui';
 
 export default function Index() {
   const [carregando, setCarregando] = useState(true);
@@ -22,11 +22,7 @@ export default function Index() {
   }, []);
 
   if (carregando) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#2563eb" />
-      </View>
-    );
+    return <Screen loading />;
   }
 
   return <Redirect href={`/${destino}`} />;
