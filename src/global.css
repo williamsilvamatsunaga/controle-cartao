@@ -1,9 +1,20 @@
 :root {
-  --font-display:
-    Spline Sans, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji,
-    Segoe UI Symbol, Noto Color Emoji;
-  --font-mono:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
-  --font-rounded: 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif;
+  --font-display: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-rounded: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
   --font-serif: Georgia, 'Times New Roman', serif;
+  --color-bg: #f0f4f3;
+  --color-surface: #ffffff;
+  --color-ink: #0b1412;
+  --color-muted: #4a5c57;
+  --color-accent: #0f766e;
+  --color-border: #cdd8d5;
+  --color-track: #d5dedc;
+  color-scheme: light;
+}
+
+html,
+body {
+  background-color: var(--color-bg);
+  color: var(--color-ink);
 }
