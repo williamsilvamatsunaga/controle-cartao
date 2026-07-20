@@ -9,14 +9,14 @@
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#F0F4F3"
     },
     "web": {
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/favicon.png",
-      "themeColor": "#2563eb",
-      "backgroundColor": "#ffffff",
+      "themeColor": "#0F766E",
+      "backgroundColor": "#F0F4F3",
       "meta": {
         "apple-mobile-web-app-capable": "yes",
         "apple-mobile-web-app-status-bar-style": "default",
@@ -26,6 +26,9 @@
     "plugins": [
       "expo-router"
     ],
+    "android": {
+      "package": "com.meucartao.app"
+    },
     "experiments": {
       "typedRoutes": true
     }

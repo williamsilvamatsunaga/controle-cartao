@@ -15,7 +15,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
 
         {/* PWA geral */}
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="theme-color" content="#2563eb" />
+        <meta name="theme-color" content="#0F766E" />
 
         <ScrollViewStyleReset />
       </head>
