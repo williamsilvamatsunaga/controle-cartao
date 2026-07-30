@@ -1,3 +1,4 @@
+import { salvarPerfil } from '@/shared/storage/perfil';
 import { useFocusEffect, useRouter, type Href } from 'expo-router';
 import { Bell, Calendar, ChevronLeft, ChevronRight, FileUp, History, RotateCcw } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -29,7 +30,7 @@ import {
   contarPendentes,
   fecharFatura,
   limparTudo,
-  removerCompra,
+  removerCompra
 } from '@/shared/storage';
 import type { Categoria, Compra, PerfilFinanceiro } from '@/shared/types';
 import {
@@ -115,6 +116,9 @@ export function DashboardScreen() {
   const [novasOutrasRendas, setNovasOutrasRendas] = useState('');
   const [confirmandoCancelamento, setConfirmandoCancelamento] = useState<string | null>(null);
   const [confirmandoReset, setConfirmandoReset] = useState(false);
+  const [editandoRenda, setEditandoRenda] = useState(false);
+  const [rendaEditSalario, setRendaEditSalario] = useState('');
+  const [rendaEditOutras, setRendaEditOutras] = useState('');
   const [pendentesCaptura, setPendentesCaptura] = useState(0);
   const [lancamentosExtrato, setLancamentosExtrato] = useState<LancamentoPersistido[]>([]);
   const [mesSelecionado, setMesSelecionado] = useState(
@@ -170,6 +174,22 @@ export function DashboardScreen() {
   async function handleCancelarCompra(id: string) {
     await removerCompra(id);
     setConfirmandoCancelamento(null);
+    carregarDados();
+  }
+
+  async function handleSalvarRenda() {
+  if (!perfil) return;
+  const salNum = parseFloat(rendaEditSalario.replace(',', '.'));
+  const outNum = parseFloat(rendaEditOutras.replace(',', '.'));
+  const perfilAtualizado: PerfilFinanceiro = {
+    ...perfil,
+    salarioLiquido: !isNaN(salNum) && salNum > 0 ? salNum : perfil.salarioLiquido,
+    outrasRendas: !isNaN(outNum) ? outNum : perfil.outrasRendas,
+    };
+    await salvarPerfil(perfilAtualizado);
+    setEditandoRenda(false);
+    setRendaEditSalario('');
+    setRendaEditOutras('');
     carregarDados();
   }
 
@@ -414,6 +434,53 @@ export function DashboardScreen() {
           )}
         </Surface>
       ) : null}
+
+      {/* Editar renda */}
+{editandoRenda ? (
+  <Surface style={{ marginBottom: Spacing.three }}>
+    <Text style={{ color: colors.text, fontFamily: Fonts.sansSemiBold, fontSize: Type.bodyLg, marginBottom: Spacing.two }}>
+      Atualizar renda do mês
+    </Text>
+    <Text style={{ color: colors.textSecondary, fontFamily: Fonts.sans, fontSize: Type.label, marginBottom: 4 }}>
+      Salário líquido
+    </Text>
+    <TextInput
+      style={[styles.bannerInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background, fontFamily: Fonts.sans, marginBottom: Spacing.two }]}
+      keyboardType="numeric"
+      placeholder={`Atual: R$ ${perfil.salarioLiquido.toFixed(2)}`}
+      placeholderTextColor={colors.textSecondary}
+      value={rendaEditSalario}
+      onChangeText={setRendaEditSalario}
+    />
+    <Text style={{ color: colors.textSecondary, fontFamily: Fonts.sans, fontSize: Type.label, marginBottom: 4 }}>
+      Outras rendas
+    </Text>
+    <TextInput
+      style={[styles.bannerInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background, fontFamily: Fonts.sans, marginBottom: Spacing.two }]}
+      keyboardType="numeric"
+      placeholder={`Atual: R$ ${perfil.outrasRendas.toFixed(2)}`}
+      placeholderTextColor={colors.textSecondary}
+      value={rendaEditOutras}
+      onChangeText={setRendaEditOutras}
+    />
+    <Text style={{ color: colors.textSecondary, fontFamily: Fonts.sans, fontSize: Type.caption, marginBottom: Spacing.two }}>
+      💡 Deixe em branco para manter o valor atual.
+    </Text>
+    <View style={{ flexDirection: 'row', gap: Spacing.two }}>
+      <Button label="Salvar" variant="primary" onPress={handleSalvarRenda} style={{ flex: 1 }} />
+      <Button label="Cancelar" variant="ghost" onPress={() => { setEditandoRenda(false); setRendaEditSalario(''); setRendaEditOutras(''); }} style={{ flex: 1 }} />
+    </View>
+    </Surface>
+    ) : (
+      <Pressable
+        style={[styles.editRendaBtn, { borderColor: colors.border }]}
+        onPress={() => setEditandoRenda(true)}>
+        <Text style={{ color: colors.textSecondary, fontFamily: Fonts.sans, fontSize: Type.label }}>
+          ✏️ Atualizar renda do mês
+        </Text>
+      </Pressable>
+    )}
+
 
       <Section title="Próximos meses">
       <Surface>
@@ -715,5 +782,14 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 10,
     borderRadius: 6,
+  },
+
+    editRendaBtn: {
+    borderWidth: 1,
+    borderRadius: Radius.md,
+    borderStyle: 'dashed',
+    padding: Spacing.two,
+    alignItems: 'center',
+    marginBottom: Spacing.three,
   },
 });
