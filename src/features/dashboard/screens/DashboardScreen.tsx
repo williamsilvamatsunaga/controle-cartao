@@ -1,6 +1,6 @@
 import { salvarPerfil } from '@/shared/storage/perfil';
 import { useFocusEffect, useRouter, type Href } from 'expo-router';
-import { Bell, Calendar, ChevronLeft, ChevronRight, FileUp, History, RotateCcw } from 'lucide-react-native';
+import { Bell, Calendar, ChevronLeft, ChevronRight, History, RotateCcw, Upload } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -276,11 +276,25 @@ export function DashboardScreen() {
         title="Painel"
         subtitle={formatarMes(mesSelecionado)}
         right={
-          <Button
-            label="Nova compra"
-            onPress={() => router.push('/nova-compra')}
-            style={styles.headerCta}
-          />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.two }}>
+            <Pressable
+              onPress={() => router.push('/captura-bancaria')}
+              style={styles.sinoBtn}>
+              <Bell size={22} color={colors.accent} />
+              {pendentesCaptura > 0 && (
+                <View style={[styles.badge, { backgroundColor: colors.danger }]}>
+                  <Text style={[styles.badgeTexto, { color: colors.onAccent }]}>
+                    {pendentesCaptura > 9 ? '9+' : pendentesCaptura}
+                  </Text>
+                </View>
+              )}
+            </Pressable>
+            <Button
+              label="Nova compra"
+              onPress={() => router.push('/nova-compra')}
+              style={styles.headerCta}
+            />
+          </View>
         }
       />
 
@@ -302,59 +316,9 @@ export function DashboardScreen() {
         </Pressable>
       </View>
 
-      <Section title="Fluxo do extrato" spaced={false}>
-        <Surface>
-          {lancamentosExtrato.length === 0 ? (
-            <EmptyState
-              title="Nenhum extrato ainda"
-              description="Importe CSV, OFX ou Excel para ver entradas e saídas por mês."
-              actionLabel="Importar extrato"
-              onAction={() => router.push('/importar-extrato' as Href)}
-            />
-          ) : (
-            <>
-              <DataRow
-                label="Entradas"
-                value={<MoneyText value={fluxoMes.entradas} size="sm" />}
-                emphasis
-              />
-              <DataRow
-                label="Saídas"
-                value={<MoneyText value={fluxoMes.saidas} size="sm" />}
-                emphasis
-              />
-              <DataRow
-                label="Saldo do mês"
-                value={<MoneyText value={fluxoMes.saldo} size="sm" />}
-                last={fluxoMes.rendaExtrato <= 0 && fluxoMes.saidasCartao <= 0}
-              />
-              {fluxoMes.rendaExtrato > 0 ? (
-                <DataRow
-                  label="Renda no extrato"
-                  value={<MoneyText value={fluxoMes.rendaExtrato} size="sm" />}
-                  last={fluxoMes.saidasCartao <= 0}
-                />
-              ) : null}
-              {fluxoMes.saidasCartao > 0 ? (
-                <DataRow
-                  label="Cartão no extrato"
-                  value={<MoneyText value={fluxoMes.saidasCartao} size="sm" tone="commitment" commitmentPercent={percentualAtual} />}
-                  last
-                />
-              ) : null}
-            </>
-          )}
-        </Surface>
-        <Button
-          label="Importar / adicionar mês"
-          variant="secondary"
-          icon={<FileUp size={16} color={colors.accent} />}
-          onPress={() => router.push('/importar-extrato' as Href)}
-          style={{ marginTop: Spacing.two }}
-        />
-      </Section>
+      
 
-      <Section title="Comprometimento do cartão" spaced={false}>
+        <Section title="Comprometimento do cartão" spaced={false}>
       <Surface>
         <DataRow
           label="Renda disponível"
@@ -432,43 +396,7 @@ export function DashboardScreen() {
             <Button label="Fechar fatura agora" variant="warning" onPress={() => setMostraFormFechamento(true)} />
           )}
         </Surface>
-      ) : null}
-
-      {/* Editar renda */}
-{editandoRenda ? (
-        <Surface style={{ marginBottom: Spacing.three }}>
-          <Text style={{ color: colors.text, fontFamily: Fonts.sansSemiBold, fontSize: Type.bodyLg, marginBottom: Spacing.two }}>
-            Adicionar renda extra
-          </Text>
-          <Text style={{ color: colors.textSecondary, fontFamily: Fonts.sans, fontSize: Type.label, marginBottom: 4 }}>
-            Renda atual: R$ {(perfil.salarioLiquido + perfil.outrasRendas).toFixed(2)}
-          </Text>
-          <TextInput
-            style={[styles.bannerInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background, fontFamily: Fonts.sans, marginBottom: Spacing.two }]}
-            keyboardType="numeric"
-            placeholder="Valor a adicionar (ex: 500)"
-            placeholderTextColor={colors.textSecondary}
-            value={rendaEditValor}
-            onChangeText={setRendaEditValor}
-          />
-          <Text style={{ color: colors.textSecondary, fontFamily: Fonts.sans, fontSize: Type.caption, marginBottom: Spacing.two }}>
-            💡 Esse valor será somado à sua renda atual do mês.
-          </Text>
-          <View style={{ flexDirection: 'row', gap: Spacing.two }}>
-            <Button label="Adicionar" variant="primary" onPress={handleSalvarRenda} style={{ flex: 1 }} />
-            <Button label="Cancelar" variant="ghost" onPress={() => { setEditandoRenda(false); setRendaEditValor(''); }} style={{ flex: 1 }} />
-          </View>
-        </Surface>
-      ) : (
-        <Pressable
-          style={[styles.editRendaBtn, { borderColor: colors.border }]}
-          onPress={() => setEditandoRenda(true)}>
-          <Text style={{ color: colors.textSecondary, fontFamily: Fonts.sans, fontSize: Type.label }}>
-            ✏️ Adicionar renda extra no mês
-          </Text>
-        </Pressable>
-      )}
-
+        ) : null}
 
       <Section title="Próximos meses">
       <Surface>
@@ -617,32 +545,65 @@ export function DashboardScreen() {
       </Surface>
       </Section>
 
-      <Button
-        label={
-          pendentesCaptura > 0
-            ? `Captura bancária (${pendentesCaptura})`
-            : 'Captura bancária'
-        }
-        variant="secondary"
-        icon={<Bell size={16} color={colors.accent} />}
-        onPress={() => router.push('/captura-bancaria')}
-        style={{ marginBottom: Spacing.two }}
-      />
+      
 
-      <Button
-        label="Ver histórico de faturas"
-        variant="secondary"
-        icon={<History size={16} color={colors.accent} />}
-        onPress={() => router.push('/historico')}
-        style={{ marginBottom: Spacing.two }}
+      <Section title="Ações">
+  {editandoRenda ? (
+    <Surface style={{ marginBottom: Spacing.two }}>
+      <Text style={{ color: colors.text, fontFamily: Fonts.sansSemiBold, fontSize: Type.bodyLg, marginBottom: Spacing.two }}>
+        Adicionar renda extra
+      </Text>
+      <Text style={{ color: colors.textSecondary, fontFamily: Fonts.sans, fontSize: Type.label, marginBottom: 4 }}>
+        Renda atual: R$ {(perfil.salarioLiquido + perfil.outrasRendas).toFixed(2)}
+      </Text>
+      <TextInput
+        style={[styles.bannerInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background, fontFamily: Fonts.sans, marginBottom: Spacing.two }]}
+        keyboardType="numeric"
+        placeholder="Valor a adicionar (ex: 500)"
+        placeholderTextColor={colors.textSecondary}
+        value={rendaEditValor}
+        onChangeText={setRendaEditValor}
       />
+      <Text style={{ color: colors.textSecondary, fontFamily: Fonts.sans, fontSize: Type.caption, marginBottom: Spacing.two }}>
+        💡 Esse valor será somado à sua renda atual do mês.
+      </Text>
+      <View style={{ flexDirection: 'row', gap: Spacing.two }}>
+        <Button label="Adicionar" variant="primary" onPress={handleSalvarRenda} style={{ flex: 1 }} />
+        <Button label="Cancelar" variant="ghost" onPress={() => { setEditandoRenda(false); setRendaEditValor(''); }} style={{ flex: 1 }} />
+      </View>
+    </Surface>
+      ) : (
+        <Button
+          label="✏️  Adicionar renda extra no mês"
+          variant="secondary"
+          onPress={() => setEditandoRenda(true)}
+          style={{ marginBottom: Spacing.two }}
+        />
+      )}
 
-      <Button
-        label="Backup de dados"
-        variant="secondary"
-        onPress={() => router.push('./backup')}
-        style={{ marginBottom: Spacing.two }}
-      />
+        <Button
+          label="Importar extrato"
+          variant="secondary"
+          icon={<Upload size={16} color={colors.accent} />}
+          onPress={() => router.push('/importar-extrato' as Href)}
+          style={{ marginBottom: Spacing.two }}
+        />
+
+        <Button
+          label="Ver histórico de faturas"
+          variant="secondary"
+          icon={<History size={16} color={colors.accent} />}
+          onPress={() => router.push('/historico')}
+          style={{ marginBottom: Spacing.two }}
+        />
+
+        <Button
+          label="Backup de dados"
+          variant="secondary"
+          onPress={() => router.push('/backup' as Href)}
+          style={{ marginBottom: Spacing.two }}
+        />
+      </Section>
 
       {__DEV__ ? (
         <Section title="Desenvolvimento">
@@ -786,5 +747,26 @@ const styles = StyleSheet.create({
     padding: Spacing.two,
     alignItems: 'center',
     marginBottom: Spacing.three,
+  },
+
+  sinoBtn: {
+  padding: Spacing.two,
+  position: 'relative',
+  },
+  badge: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+  },
+  badgeTexto: {
+    fontSize: 10,
+    fontFamily: Fonts.sansBold,
+    lineHeight: 12,
   },
 });
