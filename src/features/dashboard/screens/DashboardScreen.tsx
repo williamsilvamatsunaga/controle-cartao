@@ -637,6 +637,13 @@ export function DashboardScreen() {
         style={{ marginBottom: Spacing.two }}
       />
 
+      <Button
+        label="Backup de dados"
+        variant="secondary"
+        onPress={() => router.push('./backup')}
+        style={{ marginBottom: Spacing.two }}
+      />
+
       {__DEV__ ? (
         <Section title="Desenvolvimento">
           {confirmandoReset ? (
